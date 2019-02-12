@@ -1,273 +1,440 @@
-import java.io.*;
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.awt.Point;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
 
-class State implements Cloneable
-{
+public class Computer {
 
-	int rows, cols;
-	char[][] board;
+    public static void computerTurn(String[][] gameBoard) {
+        String[][] copiedBoard = copyBoard(gameBoard); // board we will work with
 
-	/* basic methods for constructing and proper hashing of State objects */
-	public State(int n_rows, int n_cols){
-		this.rows=n_rows;
-		this.cols=n_cols;
-		this.board=new char[n_rows][n_cols];
-		
-		//fill the board up with blanks
-		for(int i=0; i<n_rows; i++)
-			for(int j=0; j<n_cols; j++)
-				this.board[i][j]='.';
-	}
-	
-	public boolean equals(Object obj){
-		//have faith and cast
-		State other=(State)obj;
-		return Arrays.deepEquals(this.board, other.board);
-	}
-	
-	public int hashCode(){
-		String b="";
-		for(int i=0; i<board.length; i++)
-			b+=String.valueOf(board[0]);
-		return b.hashCode();
-	}
+        // Find Optimal Move
+        // Get Possible Moves
+        // Pick Best Move
+        miniMaxAI(gameBoard);
+        gameLogic.printBoard(gameBoard);
+        // int getScore = value(copiedBoard);
 
-	public Object clone() throws CloneNotSupportedException {
-        State new_state=new State(this.rows, this.cols);
-		for (int i=0; i<this.rows; i++)
-			new_state.board[i] = (char[]) this.board[i].clone();
-		return new_state;
-	}
-	
-	
-	
-	/* returns a list of actions that can be taken from the current state
-	actions are integers representing the column where a coin can be dropped */
-	public ArrayList<Integer> getLegalActions(){
-		ArrayList<Integer> actions=new ArrayList<Integer>();
-		for(int j=0; j<this.cols; j++)
-			if(this.board[0][j]=='.')
-				actions.add(j);
-		return actions;
-	}
-	
-	/* returns a State object that is obtained by the agent (parameter)
-	performing an action (parameter) on the current state */
-	public State generateSuccessor(char agent, int action) throws CloneNotSupportedException{
-		
-		int row;
-		for(row=0; row<this.rows && this.board[row][action]!='X' && this.board[row][action]!='O'; row++);
-		State new_state=(State)this.clone();
-		new_state.board[row-1][action]=agent;
-		
-		return new_state;
-	}
-	
-	/* Print's the current state's board in a nice pretty way */
-	public void printBoard(){
-		System.out.println(new String(new char[this.cols*2]).replace('\0', '-'));
-		for(int i=0; i<this.rows; i++){
-			for(int j=0; j<this.cols; j++){
-				System.out.print(this.board[i][j]+" ");
-			}
-			System.out.println();
-		}	
-		System.out.println(new String(new char[this.cols*2]).replace('\0', '-'));
-	}
-	
-	/* returns True/False if the agent(parameter) has won the game
-	by checking all rows/columns/diagonals for a sequence of >=4 */
-	public boolean isGoal(char agent){
-	
-		String find=""+agent+""+agent+""+agent+""+agent;
-		
-		//check rows
-		for(int i=0; i<this.rows; i++)
-			if(String.valueOf(this.board[i]).contains(find))
-				return true;
-		
-		//check cols
-		for(int j=0; j<this.cols; j++){
-			String col="";
-			for(int i=0; i<this.rows; i++)
-				col+=this.board[i][j];
-				
-			if(col.contains(find))
-				return true;
-		}
-		
-		//check diags
-		ArrayList<Point> pos_right=new ArrayList<Point>();
-		ArrayList<Point> pos_left=new ArrayList<Point>();
-		
-		for(int j=0; j<this.cols-4+1; j++)
-			pos_right.add(new Point(0,j));
-		for(int j=4-1; j<this.cols; j++)
-			pos_left.add(new Point(0,j));	
-		for(int i=1; i<this.rows-4+1; i++){
-			pos_right.add(new Point(i,0));
-			pos_left.add(new Point(i,this.cols-1));
-		}
-	
-		//check right diags
-		for (Point p : pos_right) {
-			String d="";
-			int x=p.x, y=p.y;
-			while(true){				
-				if (x>=this.rows||y>=this.cols)
-					break;
-				d+=this.board[x][y];
-				x+=1; y+=1;
-			}
-			if(d.contains(find))
-				return true;
-		}
-		
-		//check left diags
-		for (Point p : pos_left) {
-			String d="";
-			int x=p.x, y=p.y;
-			while(true){
-				if(y<0||x>=this.rows||y>=this.cols)
-					break;
-				d+=this.board[x][y];
-				x+=1; y-=1;
-			}
-			if(d.contains(find))
-				return true;
-		}
-		
-		return false;
-		
-	}
-	
-	
+        // System.out.println("Computer Turn");
+        // System.out.println("Current value of the board" + getScore);
+    }
 
-	/* returns the value of each state for minimax to min/max over at
-	zero depth. Right now it's pretty trivial, looking for only goal states.
-	(This would be perfect for infinite depth minimax. Not so great for d=2) */
-	public double evaluationFunction(){
-	
-		if (this.isGoal('O'))
-			return 1000.0;
-		if (this.isGoal('X'))
-			return -1000.0;
-		
-		return 0.0;
-	}
-	
-	
-	
-	
-	
-	
-	
+    public static String[][] copyBoard(String[][] gameBoard) {
+        int geti = gameBoard.length;
+        int getj = gameBoard[0].length;
+
+        String[][] returnCopy = new String[geti][getj];
+        for (int i = 0; i < gameBoard.length; i++)
+            for (int j = 0; j < gameBoard[i].length; j++)
+                returnCopy[i][j] = gameBoard[i][j];
+
+        return returnCopy;
+    }
+    // The double if statement only works in a 3x3 if we are gonna do the normal
+    // connect 4 we gotta do a back and forth like the github
+
+    public static void threeDumbAI(String[][] gameBoard) {
+        ArrayList < Integer > validMovesObj = getValidMoves(gameBoard); // Get Valid Moves
+        gameLogic.dropPiece(gameBoard, validMovesObj.get(0), "O");
+
+    }
+
+    public static void miniMaxAI(String[][] gameBoard) {
+        ArrayList < Integer > validMovesObj = getValidMoves(gameBoard); // Get Valid Moves
+        // System.out.println("MiniMaxAI");
+        doMiniMAX(gameBoard, 5, true);
+
+    }
+
+    public static int doMiniMAX(String[][] gameBoard, int depth, boolean isMaximizing) {
+        if (checkTerminalStates.checkGameOver(gameBoard, "X")) {
+            return value(gameBoard);
+        }
+        if (checkTerminalStates.checkGameOver(gameBoard, "O")) {
+            return value(gameBoard);
+        }
+
+        // DO MAX
+        
+        String[][] copiedBoard = copyBoard(gameBoard);
+        if (isMaximizing) {
+            ArrayList < Integer > validMovesObj = getValidMoves(copiedBoard); // Get Valid Moves
+            int max = Integer.MIN_VALUE;
+            int currI = 0;
+            for (int i = 0; i < validMovesObj.size(); i++) {
+                String[][] SubcopiedBoard = copyBoard(gameBoard);
+                if (gameLogic.canDropPiece(SubcopiedBoard, i)) {
+                    gameLogic.dropPiece(SubcopiedBoard, i, "X");
+                }
+                max = Math.max(max, doMiniMAX(SubcopiedBoard, depth - 1, false));
+
+            }
+            System.out.println(" Max: " + max);
+            return max;
+
+            // DO MINI
+
+        } else {
+
+            ArrayList < Integer > validMovesObj = getValidMoves(copiedBoard); // Get Valid Moves
+            int min = Integer.MAX_VALUE;
+            for (int i = 0; i < validMovesObj.size(); i++) {
+                String[][] SubcopiedBoard = copyBoard(gameBoard);
+
+                if (gameLogic.canDropPiece(SubcopiedBoard, i)) {
+                    gameLogic.dropPiece(SubcopiedBoard, i, "X");
+                }
+                min = Math.min(min, doMiniMAX(SubcopiedBoard, depth - 1, true));
+
+            }
+            //System.out.println(min);
+            System.out.println(" Min: " + min);
 
 
+            return min;
+
+        }
+
+    }
+
+    public static int value(String[][] gameBoard) {
+        int score = 0;
+        // Get Score from All Directions
+        score += getHorizontalHeuristic(gameBoard) + getVerticalHeuristic(gameBoard) +
+            getDiagonalUpperHeuristic(gameBoard) + getDiagonalLowerHeuristic(gameBoard);
+
+        return score;
+
+    }
+
+    public static int getHorizontalHeuristic(String[][] gameBoard) {
+        int score = 0;
+
+        /* Check Horizontals */
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j <= 0; j++) {
+
+                // MAX
+                if (gameBoard[i][j] == "X" && gameBoard[i][j + 1] == "X" && gameBoard[i][j + 2] == "X") {
+                    score += 1000;
+                    // System.out.println("Score + 100 Horizontal");
+
+                }
+
+                if (gameBoard[i][j] == "X" && gameBoard[i][j + 1] == "X" && gameBoard[i][j + 2] == "?") {
+                    score += 100;
+                    // System.out.println("Score + 100 Horizontal");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i][j + 1] == "X" && gameBoard[i][j + 2] == "X") {
+                    score += 100;
+                    // System.out.println("Score + 100 Horizontal");
+
+                }
+
+                if (gameBoard[i][j] == "X" && gameBoard[i][j + 1] == "?" && gameBoard[i][j + 2] == "?") {
+                    score += 5;
+                    // System.out.println("Score + 5 Horizontal");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i][j + 1] == "?" && gameBoard[i][j + 2] == "X") {
+                    score += 5;
+                    // System.out.println("Score + 5 Horizontal");
+
+                }
+                // MIN
+
+                if (gameBoard[i][j] == "O" && gameBoard[i][j + 1] == "O" && gameBoard[i][j + 2] == "O") {
+                    score += -1000;
+                    // System.out.println("Score + 100 Horizontal");
+
+                }
+
+                if (gameBoard[i][j] == "O" && gameBoard[i][j + 1] == "O" && gameBoard[i][j + 2] == "?") {
+                    score += -100;
+                    // System.out.println("Score + 100 Horizontal");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i][j + 1] == "O" && gameBoard[i][j + 2] == "O") {
+                    score += -100;
+                    // System.out.println("Score + 100 Horizontal");
+
+                }
+
+                if (gameBoard[i][j] == "O" && gameBoard[i][j + 1] == "?" && gameBoard[i][j + 2] == "?") {
+                    score += -5;
+                    // System.out.println("Score + 5 Horizontal");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i][j + 1] == "?" && gameBoard[i][j + 2] == "O") {
+                    score += -5;
+                    // System.out.println("Score + 5 Horizontal");
+
+                }
+
+                // If Two Across ?? Score +100 Game Ending
+
+            }
+        }
+        return score;
+
+    }
+
+    public static int getVerticalHeuristic(String[][] gameBoard) {
+        int score = 0;
+        /* Check Verticals */
+        // System.out.println("Checking Vertical");
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i <= 0; i++) {
+
+                // MAX
+
+                if (gameBoard[i][j] == "X" && gameBoard[i + 1][j] == "X" && gameBoard[i][i + 2] == "X") {
+                    score += 1000;
+                    // System.out.println("Score +100 Vertical");
+
+                }
+                if (gameBoard[i][j] == "X" && gameBoard[i + 1][j] == "X" && gameBoard[i][i + 2] == "?") {
+                    score += 100;
+                    // System.out.println("Score +100 Vertical");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i + 1][j] == "X" && gameBoard[i][i + 2] == "X") {
+                    score += 100;
+                    // System.out.println("Score +100 Vertical");
+
+                }
+                if (gameBoard[i][j] == "X" && gameBoard[i + 1][j] == "?" && gameBoard[i + 2][j] == "?") {
+                    score += 5;
+                    // System.out.println("Score + 5 Vertical");
+                } else if (gameBoard[i][j] == "?" && gameBoard[i + 1][j] == "?" && gameBoard[i + 2][j] == "X") {
+                    score += 5;
+                    // System.out.println("Score + 5 Vertical");
+                }
+
+                // MIn
+
+                if (gameBoard[i][j] == "O" && gameBoard[i + 1][j] == "O" && gameBoard[i][i + 2] == "O") {
+                    score += -1000;
+                    // System.out.println("Score +100 Vertical");
+
+                }
+                if (gameBoard[i][j] == "O" && gameBoard[i + 1][j] == "O" && gameBoard[i][i + 2] == "?") {
+                    score += -100;
+                    // System.out.println("Score +100 Vertical");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i + 1][j] == "O" && gameBoard[i][i + 2] == "O") {
+                    score += -100;
+                    // System.out.println("Score +100 Vertical");
+
+                }
+                if (gameBoard[i][j] == "O" && gameBoard[i + 1][j] == "?" && gameBoard[i + 2][j] == "?") {
+                    score += -5;
+                    // System.out.println("Score + 5 Vertical");
+                } else if (gameBoard[i][j] == "?" && gameBoard[i + 1][j] == "?" && gameBoard[i + 2][j] == "O") {
+                    score += -5;
+                    // System.out.println("Score + 5 Vertical");
+                }
+
+            }
+        }
+        return score;
+    }
+
+    public static int getDiagonalUpperHeuristic(String[][] gameBoard) {
+        int score = 0;
+        // System.out.println("Checking diagnols");
+        for (int i = 2; i < gameBoard.length; i++) {
+            for (int j = 0; j < gameBoard.length - 2; j++) {
+                // System.out.println("Got" + i + "" + j + "Checking" + (i - 1) + (j + 1) +
+                // "and" + (i - 2) + (j + 2));
+
+                // MAX
+
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j + 1] == "X" && gameBoard[i - 2][j + 2] == "X") {
+                    score += 1000;
+                    // System.out.println("Score + 100 DiagnolUpper");
+                }
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j + 1] == "X" && gameBoard[i - 2][j + 2] == "?") {
+                    score += 100;
+                    // System.out.println("Score + 100 DiagnolUpper");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j + 1] == "X" && gameBoard[i - 2][j + 2] == "X") {
+                    score += 100;
+                    // System.out.println("Score + 100 DiagnolUpper");
+
+                }
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j + 1] == "?" && gameBoard[i - 1][j + 2] == "?") {
+                    score += 5;
+                    // System.out.println("Score + 5 DiagnaolUpper");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j + 1] == "?" && gameBoard[i - 1][j + 2] == "X") {
+                    score += 5;
+                    // System.out.println("Score + 5 DiagnaolUpper");
+
+                }
+
+                // MIN
+
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j + 1] == "O" && gameBoard[i - 2][j + 2] == "O") {
+                    score += -1000;
+                    // System.out.println("Score + 100 DiagnolUpper");
+
+                }
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j + 1] == "O" && gameBoard[i - 2][j + 2] == "?") {
+                    score += -100;
+                    // System.out.println("Score + 100 DiagnolUpper");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j + 1] == "O" && gameBoard[i - 2][j + 2] == "O") {
+                    score += -100;
+                    // System.out.println("Score + 100 DiagnolUpper");
+
+                }
+
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j + 1] == "?" && gameBoard[i - 1][j + 2] == "?") {
+                    score += -5;
+                    // System.out.println("Score + 5 DiagnaolUpper");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j + 1] == "?" && gameBoard[i - 1][j + 2] == "O") {
+                    score += -5;
+                    // System.out.println("Score + 5 DiagnaolUpper");
+
+                }
+
+            }
+        }
+        return score;
+
+    }
+
+    public static int getDiagonalLowerHeuristic(String[][] gameBoard) {
+        int score = 0;
+        // Check Diagnols Going down
+        // System.out.println("Checking second diganols");
+        for (int i = gameBoard.length - 1; i > 1; i--) {
+            for (int j = gameBoard.length - 1; j > 1; j--) {
+                // System.out.println("Got" + i + "" + j + "Checking" + (i - 1) + (j - 1) +
+                // "and" + (i - 2) + (j - 2));
+
+                // MAX
+
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j - 1] == "X" && gameBoard[i - 2][j - 2] == "X") {
+                    score += 1000;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                }
+
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j - 1] == "X" && gameBoard[i - 2][j - 2] == "?") {
+                    score += 100;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j - 1] == "X" && gameBoard[i - 2][j - 2] == "X") {
+                    score += 100;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                }
+
+                if (gameBoard[i][j] == "X" && gameBoard[i - 1][j - 1] == "?" && gameBoard[i - 2][j - 2] == "?") {
+                    score += 5;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j - 1] == "?" && gameBoard[i - 2][j - 2] == "X") {
+                    score += 5;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+                    //
+                }
+
+                // MIN
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j - 1] == "O" && gameBoard[i - 2][j - 2] == "O") {
+                    score += -1000;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                }
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j - 1] == "X" && gameBoard[i - 2][j - 2] == "?") {
+                    score += -100;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j - 1] == "O" && gameBoard[i - 2][j - 2] == "O") {
+                    score += -100;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                }
+
+                if (gameBoard[i][j] == "O" && gameBoard[i - 1][j - 1] == "?" && gameBoard[i - 2][j - 2] == "?") {
+                    score += -5;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+
+                } else if (gameBoard[i][j] == "?" && gameBoard[i - 1][j - 1] == "?" && gameBoard[i - 2][j - 2] == "O") {
+                    score += -5;
+                    // System.out.println("Score + 100 Diagnaol Lower");
+                    //
+                }
+
+            }
+
+        }
+        return score;
+    }
+
+    public static ArrayList < Integer > getValidMoves(String[][] gameBoard) {
+        ArrayList < Integer > validMovesObj = new ArrayList < Integer > ();
+        for (int i = 0; i < gameBoard.length; i++) {
+            // System.out.println("Dropping into" + 0 + i );
+            if (gameBoard[0][i] == "?") {
+                // System.out.println("valid Move here" + 0 + i);
+                validMovesObj.add(i);
+
+            }
+
+        }
+        // System.out.println("Valid Moves" + Arrays.toString(validMovesObj.toArray()));
+
+        return validMovesObj;
+    }
 }
 
-class minimaxAgent{
-	
-	int depth;
-	int x=0;
-	public minimaxAgent(int depth)
-	{
-		this.depth = depth;
-	}	
-	
-	public int getAction(State st) throws CloneNotSupportedException
-	{
-		double val = max_value(st, depth);
-		//return max_value(st, depth);
-		return x;
-		
-	}
-	
-	public double max_value(State st, int d) throws CloneNotSupportedException
-	{
-		ArrayList<Integer> children = new ArrayList<Integer>();
-		if(d ==0)
-		return st.evaluationFunction();
-		else{
-		children = st.getLegalActions();
-		double v = -10000000;
-		
-		double z;
-		//double z;
-		for(int i =0; i<children.size();i++)
-		{
-			z = min_value(st.generateSuccessor('O',children.get(i)),d);
-			if(z >= v)
-			{
-				v =z;
-				this.x = i;
-			}
-		}
-		//System.out.println("x: "+this.x);
-		return v;
-		}
-	}
-	
-	public double min_value(State st, int d) throws CloneNotSupportedException
-	{
-		
-		ArrayList<Integer> children = new ArrayList<Integer>();
-		if(d == 0)
-		return st.evaluationFunction();
-		else
-		{
-		children = st.getLegalActions();
-		
-		double v = 10000000;
-		int x=0;
-		double z;
-		for(int i =0; i<children.size();i++)
-		{
-			z= max_value(st.generateSuccessor('X',children.get(i)),d-1);
-			if(z <= v)
-				v=z;
-		
-		}
-		return v;
-		}
-	}
-	
-	
-	
-}
+// Find open spots
+// Add to List
+// Recursive(n)
+// Call until baord is filled or win
+// Return
+/*
+ * 
+ * /* public static Object MiniMax(String[][] copiedBoard) { return
+ * doMax(copiedBoard);
+ * 
+ * public static ArrayList<Integer> getPossibleMoves(String[][] gameBoard) {
+ * ArrayList<Integer> q = new ArrayList<Integer>(); // Create an ArrayList
+ * object System.out.println("Starting Check move"); // Get all possible moves
+ * for (int intCol = 0; intCol < gameBoard.length; intCol++) { for (int intRow =
+ * gameBoard.length - 1; intRow >= 0; intRow--) { if (gameBoard[intRow][intCol]
+ * == "?") { // Put all possible moves on queue
+ * System.out.println("Checking Possible Moves" + intRow + intCol);
+ * q.add(intCol); break; }
+ * 
+ * }
+ * 
+ * } // do Max for all moves in q return q;
+ * 
+ * } }
+ */
 
-public class connect4AI{
-
-	public static void main(String[] args) throws CloneNotSupportedException{
-	
-	System.out.println("Enter the depth:");
-	Scanner in = new Scanner(System.in);
-	int depth = in.nextInt();
-	
-		
-	minimaxAgent mma = new minimaxAgent(depth);
-	State s=new State(6,7);
-	while(true){
-		int action = mma.getAction(s);
-		//System.out.println("WOWOW");
-		s = s.generateSuccessor('O', action);
-		s.printBoard();
-		//check if O won?
-		if(s.isGoal('O'))
-		break;
-		int enemy_move = in.nextInt();
-		s = s.generateSuccessor('X', enemy_move);
-		s.printBoard();
-		//check if X won? break
-		if(s.isGoal('X'))
-		break;
-		//pause
-	}
-		
-		
-
-	}
-}
+/*
+ * public static Object doMax(String[][] copiedBoard) { int best_move = 0;
+ * 
+ * if (checkTerminalStates.checkGameOver(copiedBoard, "X")) { // If game over }
+ * else { ArrayList<Integer> moves = new ArrayList<Integer>(); // Create an
+ * ArrayList object moves = getPossibleMoves(copiedBoard); for (Integer i :
+ * moves) { if ((checkMoveValue(i) > checkMoveValue(best_move))) { best_move =
+ * i; } }
+ * 
+ * } return best_move;
+ * 
+ * }
+ * 
+ * 
+ * private static int checkMoveValue(String[][] gameBoard) { // TODO
+ * Auto-generated method stub return 0; }
+ * 
+ * 
+ * public static void doMini(String[][] copiedBoard) { int best_move = 0;
+ * ArrayList<Integer> moves = new ArrayList<Integer>(); // Create an ArrayList
+ * object getPossibleMoves(copiedBoard); for (Integer i : moves) { if
+ * ((checkMoveValue(i) > checkMoveValue(best_move))) { best_move = i; } } }
+ */
